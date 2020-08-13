@@ -1,15 +1,13 @@
 package stringset
 
-import "fmt"
+import "strings"
 
 // Set is a collection of unique string values.
-type Set struct {
-	data map[string]interface{}
-}
+type Set map[string]struct{}
 
 // New creates a new set.
 func New() Set {
-	return Set{data: make(map[string]interface{})}
+	return make(map[string]struct{})
 }
 
 // NewFromSlice creates a new set from a slice of strings.
@@ -26,33 +24,30 @@ func NewFromSlice(slice []string) Set {
 func (s Set) String() string {
 	stringifiedSet := "{"
 
-	length := len(s.data) - 1
-	index := 0
-	for x := range s.data {
-		x = fmt.Sprintf("\"%s\"", x)
-		if length != 0 && index != length {
-			x += ", "
-		}
-		stringifiedSet += x
-		index++
+	items := []string{}
+	for x := range s {
+		items = append(items, "\""+x+"\"")
 	}
+	stringifiedSet += strings.Join(items, ", ")
 	stringifiedSet += "}"
+
 	return stringifiedSet
 }
 
 // IsEmpty checks is the set is empty
 func (s Set) IsEmpty() bool {
-	return len(s.data) == 0
+	return len(s) == 0
 }
 
 // Has checks for a key in the set
 func (s Set) Has(key string) bool {
-	return s.data[key] != nil
+	_, ok := s[key]
+	return ok
 }
 
 // Subset returns true if all of its elements are contained in the other set
 func Subset(s1, s2 Set) bool {
-	for key := range s1.data {
+	for key := range s1 {
 		if !s2.Has(key) {
 			return false
 		}
@@ -62,7 +57,7 @@ func Subset(s1, s2 Set) bool {
 
 // Disjoint returns true are disjoint if they share no elements
 func Disjoint(s1, s2 Set) bool {
-	for key := range s1.data {
+	for key := range s1 {
 		if s2.Has(key) {
 			return false
 		}
@@ -72,11 +67,11 @@ func Disjoint(s1, s2 Set) bool {
 
 // Equal returns true if all elements are in both sets
 func Equal(s1, s2 Set) bool {
-	if len(s1.data) != len(s2.data) {
+	if len(s1) != len(s2) {
 		return false
 	}
 
-	for key := range s1.data {
+	for key := range s1 {
 		if !s2.Has(key) {
 			return false
 		}
@@ -86,13 +81,13 @@ func Equal(s1, s2 Set) bool {
 
 // Add element to Set
 func (s Set) Add(key string) {
-	s.data[key] = key
+	s[key] = struct{}{}
 }
 
 // Intersection returns a set of all shared elements
 func Intersection(s1, s2 Set) Set {
 	matched := New()
-	for key := range s1.data {
+	for key := range s1 {
 		if s2.Has(key) {
 			matched.Add(key)
 		}
@@ -104,7 +99,7 @@ func Intersection(s1, s2 Set) Set {
 // Difference (or Complement) of a set is a set of all elements that are only in the first set
 func Difference(s1, s2 Set) Set {
 	matched := New()
-	for key := range s1.data {
+	for key := range s1 {
 		if !s2.Has(key) {
 			matched.Add(key)
 		}
@@ -117,11 +112,11 @@ func Difference(s1, s2 Set) Set {
 func Union(s1, s2 Set) Set {
 	union := New()
 
-	for key := range s1.data {
+	for key := range s1 {
 		union.Add(key)
 	}
 
-	for key := range s2.data {
+	for key := range s2 {
 		union.Add(key)
 	}
 	return union
